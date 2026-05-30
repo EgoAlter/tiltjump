@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!-- user-scalable=no prevents iOS double-tap zoom which would break gameplay -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+  <!-- iOS Safari PWA meta tags — these are what make "Add to Home Screen" behave like a native app -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <!-- black-translucent makes the status bar overlay the canvas instead of pushing it down -->
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="TiltJump">
+
+  <!-- Standard PWA / Android theme colour — matches our background -->
+  <meta name="theme-color" content="#0a0a1a">
+
+  <title>TiltJump</title>
+
+  <!-- PWA manifest — tells the browser this is installable -->
+  <link rel="manifest" href="/manifest.json">
+
+  <!-- Press Start 2P — retro pixel font. Loaded from CDN for session 1.
+       For full offline support this would need to be self-hosted and cached by the SW. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0a0a1a;
+      /* overflow: hidden prevents rubber-band scrolling on iOS which would
+         fight with the tilt controls and look terrible */
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    #gameCanvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      /* touch-action: none — tells the browser we are handling ALL touch events
+         ourselves. Without this, iOS intercepts touch to attempt scroll/zoom,
+         which adds latency and fights with our input handling. */
+      touch-action: none;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- type="module" defers execution until the HTML is parsed, so the canvas
+       element is guaranteed to exist when app.js runs. It also enables ES module
+       import/export syntax throughout the codebase. -->
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
