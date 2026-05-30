@@ -19,6 +19,11 @@
   <!-- PWA manifest — tells the browser this is installable -->
   <link rel="manifest" href="/manifest.json">
 
+  <!-- apple-touch-icon — the iOS-specific tag Safari actually uses for the home
+       screen icon. Safari ignores the manifest's icons array for this purpose and
+       looks for this link tag instead. Without it, iOS falls back to a screenshot. -->
+  <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
+
   <!-- Press Start 2P — retro pixel font. Loaded from CDN for session 1.
        For full offline support this would need to be self-hosted and cached by the SW. -->
   <link rel="preconnect" href="https://fonts.googleapis.com">

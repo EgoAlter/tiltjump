@@ -11,7 +11,7 @@
 //
 // COCKTAIL SHAKER NOTE: same SW pattern applies — hospitality app is also a static PWA.
 
-const CACHE_NAME = 'tiltjump-v4'; // Bump on every deploy that changes JS files
+const CACHE_NAME = 'tiltjump-v5'; // Bump on every deploy that changes JS files
 
 // Every JS module file must be listed here or it won't be available offline.
 // When you add a new file to the project, add it here too.
