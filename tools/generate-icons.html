@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TiltJump — Icon Generator</title>
+  <style>
+    body {
+      background: #0a0a1a;
+      color: #00ff88;
+      font-family: "Courier New", monospace;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 40px;
+    }
+    h1  { font-size: 18px; margin: 0 0 4px; }
+    p   { color: #446644; font-size: 13px; margin: 0 0 20px; }
+    .icon-block { display: flex; flex-direction: column; gap: 12px; }
+    .label { font-size: 13px; color: #446644; }
+    canvas { display: block; image-rendering: pixelated; }
+    button {
+      margin-top: 8px;
+      background: #003322;
+      color: #00ff88;
+      border: 1px solid #00ff88;
+      padding: 8px 18px;
+      font-family: inherit;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    button:hover { background: #004433; }
+  </style>
+</head>
+<body>
+
+  <div>
+    <h1>TiltJump Icon Generator</h1>
+    <p>
+      Opens in browser — click each button to download the PNG.<br>
+      Move both files into <code style="color:#00ff88">assets/icons/</code> then commit and push.
+    </p>
+  </div>
+
+  <div class="icon-block">
+    <span class="label">192 × 192  (home screen / manifest)</span>
+    <canvas id="c192" width="192" height="192"></canvas>
+    <button onclick="dl('c192','icon-192.png')">Download  icon-192.png</button>
+  </div>
+
+  <div class="icon-block">
+    <span class="label">512 × 512  (splash screen / app store)</span>
+    <canvas id="c512" width="512" height="512"></canvas>
+    <button onclick="dl('c512','icon-512.png')">Download  icon-512.png</button>
+  </div>
+
+  <script>
+    // Draws the TiltJump character at an arbitrary integer scale.
+    // Pixel positions mirror renderer.js drawPlayer() exactly — same character,
+    // just scaled up so the icon is crisp at any size.
+    function drawIcon(canvas, scale) {
+      const ctx  = canvas.getContext('2d');
+      const size = canvas.width;
+
+      // ── Background ──────────────────────────────────────────────────────────
+      ctx.fillStyle = '#0a0a1a';
+      ctx.fillRect(0, 0, size, size);
+
+      // Stars — fixed positions so both icon sizes look consistent
+      const stars = [
+        [0.08,0.08],[0.28,0.05],[0.68,0.10],[0.88,0.07],[0.50,0.04],
+        [0.14,0.30],[0.84,0.28],[0.04,0.58],[0.93,0.62],[0.72,0.44],
+        [0.22,0.78],[0.78,0.82],[0.50,0.90],[0.38,0.60],[0.60,0.22],
+        [0.92,0.44],[0.06,0.42],[0.44,0.18],[0.18,0.52],[0.82,0.68],
+      ];
+      for (const [rx, ry] of stars) {
+        const alpha = 0.3 + Math.floor((rx + ry) * 7) % 4 * 0.12;
+        ctx.fillStyle = `rgba(255,255,255,${alpha.toFixed(2)})`;
+        ctx.fillRect(Math.floor(rx * size), Math.floor(ry * size), 2, 2);
+      }
+
+      // ── Character layout ────────────────────────────────────────────────────
+      // Natural pixel dimensions (matching renderer.js):
+      //   Body:     36 × 36
+      //   Antennae: 7px above body, left at x+7 (4w) and x+25 (4w)
+      // Total visual height including antennae: 43px
+
+      const bodyW  = 36 * scale;
+      const bodyH  = 36 * scale;
+      const antH   = 7  * scale;
+      const totalH = bodyH + antH;
+
+      // Centre the whole character (antennae + body) inside the icon
+      const ox = Math.floor((size - bodyW) / 2); // body left
+      const oy = Math.floor((size - totalH) / 2) + antH; // body top
+
+      // ── Antennae ─────────────────────────────────────────────────────────────
+      ctx.fillStyle = '#00ff88';
+      ctx.fillRect(ox + 7  * scale, oy - antH, 4 * scale, antH); // Left shaft
+      ctx.fillRect(ox + 25 * scale, oy - antH, 4 * scale, antH); // Right shaft
+
+      ctx.fillStyle = '#ffffff';
+      const tipH = Math.max(2, 3 * scale);
+      ctx.fillRect(ox + 7  * scale, oy - antH, 4 * scale, tipH); // Left tip
+      ctx.fillRect(ox + 25 * scale, oy - antH, 4 * scale, tipH); // Right tip
+
+      // ── Body ─────────────────────────────────────────────────────────────────
+      ctx.fillStyle = '#00ff88';
+      ctx.fillRect(ox, oy, bodyW, bodyH);
+
+      // Body highlight — small white patch in top-left for depth
+      ctx.fillStyle = 'rgba(255,255,255,0.28)';
+      ctx.fillRect(ox + 2 * scale, oy + 2 * scale, 6 * scale, 4 * scale);
+
+      // ── Left eye ──────────────────────────────────────────────────────────────
+      ctx.fillStyle = '#003322';
+      ctx.fillRect(ox + 7  * scale, oy + 9  * scale, 7 * scale, 7 * scale);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(ox + 8  * scale, oy + 10 * scale, 3 * scale, 3 * scale);
+
+      // ── Right eye ─────────────────────────────────────────────────────────────
+      ctx.fillStyle = '#003322';
+      ctx.fillRect(ox + 22 * scale, oy + 9  * scale, 7 * scale, 7 * scale);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(ox + 23 * scale, oy + 10 * scale, 3 * scale, 3 * scale);
+
+      // ── Mouth ─────────────────────────────────────────────────────────────────
+      ctx.fillStyle = '#003322';
+      ctx.fillRect(ox + 9  * scale, oy + 23 * scale, 18 * scale, 3 * scale); // Lip
+      ctx.fillRect(ox + 7  * scale, oy + 19 * scale, 4  * scale, 4 * scale); // Left corner
+      ctx.fillRect(ox + 25 * scale, oy + 19 * scale, 4  * scale, 4 * scale); // Right corner
+
+      // ── Platform under feet ───────────────────────────────────────────────────
+      // Orange platform stripe — gives context that this is a platformer,
+      // and fills the lower portion of the icon nicely.
+      const platY = oy + bodyH + Math.max(2, 2 * scale);
+      const platH = Math.max(4, 4 * scale);
+      const platX = Math.max(0, ox - 12 * scale);
+      const platW = Math.min(size, bodyW + 24 * scale);
+
+      ctx.fillStyle = '#ff6600';
+      ctx.fillRect(platX, platY, platW, platH);
+      ctx.fillStyle = '#ffaa44';
+      ctx.fillRect(platX, platY, platW, Math.max(2, Math.floor(platH / 3))); // Shine stripe
+    }
+
+    // ── Render both sizes ──────────────────────────────────────────────────────
+    // scale = 4 → body renders as 144px inside 192px canvas
+    // scale = 9 → body renders as 324px inside 512px canvas
+    drawIcon(document.getElementById('c192'), 4);
+    drawIcon(document.getElementById('c512'), 9);
+
+    // ── Download helper ────────────────────────────────────────────────────────
+    function dl(canvasId, filename) {
+      const a = document.createElement('a');
+      a.download = filename;
+      a.href = document.getElementById(canvasId).toDataURL('image/png');
+      a.click();
+    }
+  </script>
+</body>
+</html>
