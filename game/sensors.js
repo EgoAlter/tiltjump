@@ -115,7 +115,6 @@ export const SensorManager = {
     if (!_iosPermissionRequired) {
       // Android / desktop: sensors available without any permission call
       _permissionGranted = true;
-      console.log('[SensorManager] Non-iOS: sensors available without permission');
       return true;
     }
 
@@ -143,7 +142,6 @@ export const SensorManager = {
       }
     }
 
-    console.log('[SensorManager] Permission:', _permissionGranted ? 'granted' : 'denied');
     return _permissionGranted;
   },
 
@@ -192,7 +190,6 @@ export const SensorManager = {
     };
 
     window.addEventListener('deviceorientation', _orientationHandler);
-    console.log('[SensorManager] deviceorientation listener active');
   },
 
   // ─── startMotion() ──────────────────────────────────────────────────────────
@@ -253,7 +250,6 @@ export const SensorManager = {
     };
 
     window.addEventListener('devicemotion', _motionHandler);
-    console.log('[SensorManager] devicemotion listener active');
   },
 
   // ─── calibrate() ─────────────────────────────────────────────────────────────
@@ -275,7 +271,6 @@ export const SensorManager = {
   calibrate() {
     _calibrationOffset = _rawGamma;
     _smoothedTilt = 0; // Reset smoothed history so it starts fresh from the new zero
-    console.log('[SensorManager] Calibrated — offset:', _calibrationOffset.toFixed(1), '°');
   },
 
   // ─── getTilt() ────────────────────────────────────────────────────────────────
@@ -401,7 +396,6 @@ export const SensorManager = {
     }
     _smoothedTilt = 0;
     _rawGamma     = 0;
-    console.log('[SensorManager] All listeners removed');
   },
 
   // ─── debug() ─────────────────────────────────────────────────────────────────
