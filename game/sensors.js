@@ -179,6 +179,11 @@ export const SensorManager = {
   //
   // COCKTAIL SHAKER NOTE: same listener, but read event.beta for the pour gesture.
   startOrientation() {
+    // Guard: if a handler is already attached, don't add a second one.
+    // A second addEventListener with a new arrow function would create an
+    // unremovable duplicate — removeEventListener only matches by reference.
+    if (_orientationHandler) return;
+
     _orientationHandler = (event) => {
       // event.gamma is null if the sensor is unavailable on the device
       if (event.gamma !== null) {
@@ -223,6 +228,8 @@ export const SensorManager = {
   // THIS IS THE KEY API FOR THE COCKTAIL SHAKER APP.
   // The shaker app registers onShake(() => confirmMix()) and this listener fires it.
   startMotion() {
+    if (_motionHandler) return; // Guard against double-attach (same reason as startOrientation)
+
     _motionHandler = (event) => {
       const a = event.accelerationIncludingGravity;
       if (!a || a.x === null) return; // Sensor not available on this device

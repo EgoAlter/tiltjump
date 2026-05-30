@@ -73,12 +73,9 @@ export class Engine {
     this.state = STATE.PERMISSION; // Show permission screen immediately while dialog shows
     const granted = await SensorManager.requestPermission();
 
-    if (granted) {
-      SensorManager.startOrientation();
-      SensorManager.startMotion();
-    }
-    // Even if denied, we start the game — keyboard/fallback controls still work
-
+    // startOrientation/startMotion are called in _startGame() so they also
+    // re-run on every retry. Permission state is preserved by the OS — we
+    // don't need to request it again on subsequent games.
     this._startGame();
   }
 
@@ -87,8 +84,15 @@ export class Engine {
     this.player.reset(this.canvas);
     this.platforms.reset(this.canvas);
     this.score.reset();
-    // Capture current tilt angle as the "zero" reference — must happen at game start
-    // so the player's natural hold angle is treated as straight ahead
+    // Re-attach sensor listeners every game start.
+    // WHY here and not only in _requestSensorPermission:
+    // _gameOver() calls SensorManager.stop() which removes the listeners.
+    // Without re-attaching here, retrying after death leaves sensors dead
+    // until the page is refreshed. startOrientation/startMotion are
+    // idempotent (guarded against double-attach) so calling them every
+    // game start is safe.
+    SensorManager.startOrientation();
+    SensorManager.startMotion();
     SensorManager.calibrate();
     this.state = STATE.PLAYING;
   }
