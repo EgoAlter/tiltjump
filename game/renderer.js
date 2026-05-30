@@ -1,90 +1,115 @@
-// renderer.js — All canvas drawing. Receives game state as data; draws it.
-// No physics or game logic here — pure visual output.
-//
-// WHY canvas instead of DOM elements:
-// At 60fps with dozens of moving objects, updating DOM positions forces the browser
-// to recalculate layout on every frame (layout thrashing). Canvas gives us a raw
-// 2D buffer: we clear it and redraw everything each frame, bypassing the layout engine.
-// For a game this is always faster and simpler than DOM animation.
+// renderer.js — All canvas drawing. Pure visual output, no game logic.
 
-// Colour palette — retro pixel aesthetic, dark background with neon accents
-const COLOURS = {
-  background:      '#0a0a1a', // Near-black blue — feels like a CRT in a dark room
-  backgroundGrid:  '#0f0f2a', // Very slightly lighter for grid lines
-  player:          '#00ff88', // Neon green — high contrast on dark background
-  playerShadow:    '#003322', // Darker green for pixel "shadow" on the character
-  platform:        '#ff6600', // Neon orange
-  platformShine:   '#ffaa44', // Lighter stripe on top for a chunky 3D feel
-  platformShadow:  '#882200', // Darker bottom edge
+// ── Palette ───────────────────────────────────────────────────────────────────
+const BG       = '#0a0a1a';
+const PLAYER   = '#00ff88';
+const P_DARK   = '#003322'; // Player eye/mouth detail
+const P_SHINE  = '#ffffff'; // Player eye highlight
+
+// Platform colour tiers — body, top-shine, bottom-shadow.
+// WHY three tiers: purely cosmetic variety that loosely reads as common/uncommon/rare
+// without changing any collision or scoring logic. Renderer reads p.tier, nothing else does.
+const PLATFORM_COLOURS = {
+  common:   { body: '#ff6600', shine: '#ffaa44', shadow: '#882200' }, // 70% — neon orange
+  uncommon: { body: '#00ccff', shine: '#88eeff', shadow: '#005588' }, // 20% — sky blue
+  rare:     { body: '#ff44cc', shine: '#ff99ee', shadow: '#881166' }, // 10% — hot pink
 };
 
 export class Renderer {
   constructor(canvas, ctx) {
     this.canvas = canvas;
     this.ctx    = ctx;
+
+    // Pre-generate star positions once — drawn every frame at O(N) cost.
+    // WHY static: stars don't scroll with the world (they're "infinitely far away").
+    // Static stars read as a depth cue — background parallax at zero cost.
+    this.stars = Array.from({ length: 50 }, () => ({
+      x:    Math.floor(Math.random() * canvas.width),
+      y:    Math.floor(Math.random() * canvas.height),
+      size: Math.random() < 0.15 ? 2 : 1,
+      // Vary brightness slightly so they don't all look the same
+      alpha: 0.25 + Math.random() * 0.45,
+    }));
   }
 
-  // Clear the canvas each frame — required before redrawing everything
+  // Clear and redraw background every frame
   clear() {
     const { ctx, canvas } = this;
 
-    // Fill with background colour
-    ctx.fillStyle = COLOURS.background;
+    ctx.fillStyle = BG;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Subtle vertical scan lines — gives a faint CRT retro feel.
-    // Drawn every 4px, semi-transparent so they don't dominate.
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+    // Stars
+    for (const s of this.stars) {
+      ctx.fillStyle = `rgba(255,255,255,${s.alpha})`;
+      ctx.fillRect(s.x, s.y, s.size, s.size);
+    }
+
+    // Vertical scanlines — CRT retro flavour, very subtle
+    ctx.fillStyle = 'rgba(0,0,0,0.07)';
     for (let x = 0; x < canvas.width; x += 4) {
       ctx.fillRect(x, 0, 2, canvas.height);
     }
   }
 
-  // Draw the player as a blocky pixel-art character
+  // Draw the player as a pixel-art character with antennae
   drawPlayer(player) {
     const { ctx } = this;
     const { x, y, width, height } = player;
 
-    // Body — solid neon green block
-    ctx.fillStyle = COLOURS.player;
+    // Antennae — drawn above the body (purely cosmetic, above the collision box)
+    ctx.fillStyle = PLAYER;
+    ctx.fillRect(x + 7,  y - 7, 4, 7); // Left antenna shaft
+    ctx.fillRect(x + 25, y - 7, 4, 7); // Right antenna shaft
+    ctx.fillStyle = P_SHINE;
+    ctx.fillRect(x + 7,  y - 7, 4, 3); // Left tip (white)
+    ctx.fillRect(x + 25, y - 7, 4, 3); // Right tip (white)
+
+    // Body
+    ctx.fillStyle = PLAYER;
     ctx.fillRect(x, y, width, height);
 
-    // Left eye
-    ctx.fillStyle = COLOURS.playerShadow;
-    ctx.fillRect(x + 7,  y + 8, 7, 7);
+    // Body highlight — tiny white pixel in top-left corner adds depth
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.fillRect(x + 2, y + 2, 6, 4);
 
-    // Right eye
-    ctx.fillRect(x + 22, y + 8, 7, 7);
+    // Left eye socket + highlight
+    ctx.fillStyle = P_DARK;
+    ctx.fillRect(x + 7,  y + 9, 7, 7);
+    ctx.fillStyle = P_SHINE;
+    ctx.fillRect(x + 8,  y + 10, 3, 3);
 
-    // Eye highlight dots (white) — makes the eyes readable at small sizes
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(x + 8,  y + 9, 3, 3);
-    ctx.fillRect(x + 23, y + 9, 3, 3);
+    // Right eye socket + highlight
+    ctx.fillStyle = P_DARK;
+    ctx.fillRect(x + 22, y + 9, 7, 7);
+    ctx.fillStyle = P_SHINE;
+    ctx.fillRect(x + 23, y + 10, 3, 3);
 
-    // Mouth — a simple pixel grin
-    ctx.fillStyle = COLOURS.playerShadow;
-    ctx.fillRect(x + 9,  y + 22, 18, 3); // Bottom lip bar
-    ctx.fillRect(x + 7,  y + 18, 4,  4); // Left corner
-    ctx.fillRect(x + 25, y + 18, 4,  4); // Right corner
+    // Mouth — chunky pixel grin
+    ctx.fillStyle = P_DARK;
+    ctx.fillRect(x + 9,  y + 23, 18, 3); // Lip bar
+    ctx.fillRect(x + 7,  y + 19, 4,  4); // Left cheek drop
+    ctx.fillRect(x + 25, y + 19, 4,  4); // Right cheek drop
   }
 
-  // Draw all platforms with a chunky 3-layer pixel style
+  // Draw all platforms using tier-specific colour sets
   drawPlatforms(platforms) {
     const { ctx } = this;
 
     for (const p of platforms) {
+      const c = PLATFORM_COLOURS[p.tier] ?? PLATFORM_COLOURS.common;
       const { x, y, width, height } = p;
 
       // Main body
-      ctx.fillStyle = COLOURS.platform;
+      ctx.fillStyle = c.body;
       ctx.fillRect(x, y, width, height);
 
-      // Top highlight stripe — 3px lighter band gives a raised edge feel
-      ctx.fillStyle = COLOURS.platformShine;
+      // Top highlight — gives a raised, chunky feel
+      ctx.fillStyle = c.shine;
       ctx.fillRect(x, y, width, 3);
 
-      // Bottom shadow strip — 3px darker band for depth
-      ctx.fillStyle = COLOURS.platformShadow;
+      // Bottom shadow — adds depth
+      ctx.fillStyle = c.shadow;
       ctx.fillRect(x, y + height - 3, width, 3);
     }
   }

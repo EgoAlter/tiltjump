@@ -43,11 +43,12 @@ export class PlatformManager {
     // Anchor platform directly below where the player spawns — guaranteed first landing
     let y = canvas.height - 60;
     this.platforms.push({
-      x: canvas.width / 2 - PLATFORM_WIDTH / 2,
+      x:      canvas.width / 2 - PLATFORM_WIDTH / 2,
       y,
       width:  PLATFORM_WIDTH,
       height: PLATFORM_HEIGHT,
-      type: 'static',
+      type:   'static',
+      tier:   'common', // Starting platform is always common
     });
 
     // Fill the rest of the screen with random platforms
@@ -57,14 +58,23 @@ export class PlatformManager {
     }
   }
 
-  // Create one platform at the given y, random x within canvas bounds
+  // Create one platform at the given y, random x within canvas bounds.
+  // Tier is cosmetic only — common 70%, uncommon 20%, rare 10%.
+  // WHY data not presentation: the renderer reads tier and picks colours.
+  // Nothing else in the codebase needs to know a platform's tier.
   _createAt(y) {
+    const roll = Math.random();
+    const tier = roll < 0.10 ? 'rare'
+               : roll < 0.30 ? 'uncommon'
+               : 'common';
+
     return {
       x:      Math.random() * (this.canvas.width - PLATFORM_WIDTH),
       y,
       width:  PLATFORM_WIDTH,
       height: PLATFORM_HEIGHT,
       type:   'static',
+      tier,
     };
   }
 

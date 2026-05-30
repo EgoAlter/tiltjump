@@ -152,7 +152,6 @@ export class Engine {
         this.renderer.drawPlatforms(this.platforms.getAll());
         this.renderer.drawPlayer(this.player);
         this.hud.draw(this.score);
-        this.hud.drawDebug(SensorManager.debug()); // Stripped in Session 5
         break;
 
       case STATE.GAME_OVER:

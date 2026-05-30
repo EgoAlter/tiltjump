@@ -12,7 +12,7 @@ const GRAVITY = 0.3;
 const BOUNCE_VELOCITY = -13;
 
 // Maximum horizontal speed (pixels/frame). Tilt value (-1..+1) × this = vx.
-const MAX_TILT_SPEED = 5;
+const MAX_TILT_SPEED = 7; // Tune this if tilt feels too slow/fast — single source of truth
 
 export class Player {
   constructor(canvas) {
